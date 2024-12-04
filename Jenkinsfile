@@ -1,5 +1,3 @@
-sudo   nano  Jenkinsfile
-
 pipeline {
     agent any
 
@@ -68,9 +66,6 @@ pipeline {
                 }
             }
         }
-    }
-
-
     }
 }
 
