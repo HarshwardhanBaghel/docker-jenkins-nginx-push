@@ -4,7 +4,7 @@ pipeline {
     environment {
         DOCKER_IMAGE = 'mynginx/webapp'
         DOCKER_HUB_USERNAME = 'hbprac'
-        DOCKER_HUB_PASSWORD = credentials('my-docker-hub-credentials-id')  // Create Jenkins credentials for Docker Hub
+        DOCKER_HUB_PASSWORD = credentials('my-docker-hub-credentials-id')
         GITHUB_REPO = 'https://github.com/HarshwardhanBaghel/docker-jenkins-nginx-push.git'
     }
 
@@ -18,8 +18,11 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Build the NGINX Docker image
-                    docker.build("$DOCKER_IMAGE", "-f Dockerfile .")
+                    try {
+                        docker.build("$DOCKER_IMAGE", "-f Dockerfile .")
+                    } catch (Exception e) {
+                        error "Docker build failed: ${e.message}"
+                    }
                 }
             }
         }
@@ -27,9 +30,8 @@ pipeline {
         stage('Push Docker Image to Docker Hub') {
             steps {
                 script {
-                    // Log in to Docker Hub
                     docker.withRegistry('https://index.docker.io/v1/', 'my-docker-hub-credentials-id') {
-                        docker.image("$DOCKER_IMAGE").push()
+                        docker.image("$DOCKER_IMAGE").push('latest')
                     }
                 }
             }
@@ -38,11 +40,11 @@ pipeline {
         stage('Deploy to Docker') {
             steps {
                 script {
-                    // Stop and remove the existing container (if any)
-                    sh 'docker rm -f webapp-container || true'
-
-                    // Run the new Docker container
-                    sh 'docker run -d -p 80:80 --name webapp-container $DOCKER_IMAGE'
+                    sh """
+                        docker pull $DOCKER_IMAGE
+                        docker rm -f webapp-container || true
+                        docker run -d -p 80:80 --name webapp-container $DOCKER_IMAGE
+                    """
                 }
             }
         }
@@ -57,5 +59,4 @@ pipeline {
         }
     }
 }
-
 
