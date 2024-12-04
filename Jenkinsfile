@@ -62,7 +62,7 @@ pipeline {
                     //sh 'docker rm -f webapp-container || true'
 
                     // Run the new Docker container
-                    sh 'docker run -d -p 80:80 --name webapp-container $DOCKER_IMAGE_NAME'
+                    sh 'docker run -d -p 80:80 --name webapp-container $DOCKER_IMAGE_NAME:${IMAGE_TAG}'
                 }
             }
         }
